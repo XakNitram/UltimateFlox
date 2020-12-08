@@ -56,39 +56,31 @@ namespace lwvl {
 
         template<typename T>
         void construct(const T* data, GLsizei count) {
-            bind();
             glBufferData(
                 static_cast<GLenum>(target), sizeof(T) * count, 
                 data, static_cast<GLenum>(m_usage)
             );
-            clear();
         }
 
         template<class _Iter>
         void construct(_Iter first, _Iter last) {
-            bind();
             glBufferData(
                 static_cast<GLenum>(target), sizeof(*first) * (last - first),
                 &(*first), static_cast<GLenum>(m_usage)
             );
-            clear();
         }
 
         template<typename T>
         void update(const T* data, GLsizei count) {
-            bind();
             glBufferSubData(
                 static_cast<GLenum>(target), sizeof(T) * count,
                 data, static_cast<GLenum>(m_usage)
             );
-            clear();
         }
 
         template<class _Iter>
         void update(_Iter first, _Iter last, ptrdiff_t offset = 0) {
-            bind();
             glBufferSubData(static_cast<GLenum>(target), offset, sizeof(*first) * (last - first), &(*first));
-            clear();
         }
 
         void usage(Usage usage) { m_usage = usage; }

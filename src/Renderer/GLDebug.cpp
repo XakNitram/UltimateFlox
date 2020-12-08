@@ -11,7 +11,7 @@ void lwvl::debug::clearErrors() {
 
 void lwvl::debug::GLEventListener::assign(LWVLDebugProc callback) {
     glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* state) {
-        ((GLEventListener*)state)->invoke(source, type, id, severity, length, message);
+        ((GLEventListener*)state)->invoke(source, type, severity, id, length, message);
     }, this);
 }
 
@@ -62,5 +62,5 @@ void lwvl::debug::GLEventListener::control(bool enabled) {
 }
 
 void lwvl::debug::GLEventListener::invoke(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message) {
-    m_callback(static_cast<Source>(source), static_cast<Type>(type), id, static_cast<Severity>(severity), length, message, m_userPtr);
+    m_callback(static_cast<Source>(source), static_cast<Type>(type), static_cast<Severity>(severity), id, length, message, m_userPtr);
 }

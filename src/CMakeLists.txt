@@ -1,5 +1,7 @@
 add_executable(
     ultimate-flox Application.cpp
+    Flock.hpp
+    Flock.cpp
 
     # Core
     Core/Utils.hpp
@@ -7,7 +9,13 @@ add_executable(
     Core/Simulation.hpp
     Core/Simulation.cpp
 
+    # Math
+    Math/Geometrics.hpp
+    Math/Geometrics.cpp
+
     # Renderer
+    Renderer/GLDebug.hpp
+    Renderer/GLDebug.cpp
     Renderer/Shader.hpp
     Renderer/Shader.cpp
     Renderer/VertexArray.hpp
@@ -18,6 +26,13 @@ add_executable(
 target_link_libraries(ultimate-flox PRIVATE glad)
 target_link_libraries(ultimate-flox PRIVATE glfw)
 target_precompile_headers(ultimate-flox PRIVATE pch.hpp pch.cpp)
+
+set_target_properties(
+    ultimate-flox PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
 
 add_custom_command(
     TARGET ultimate-flox POST_BUILD

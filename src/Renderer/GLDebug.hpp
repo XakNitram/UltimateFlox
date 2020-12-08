@@ -39,8 +39,8 @@ namespace lwvl {
 #else
         using LWVLDebugProc = void(*)(
 #endif
-            Source source, Type type, unsigned int id,
-            Severity severity, int length, const char* message,
+            Source source, Type type, Severity severity, 
+            unsigned int id, int length, const char* message,
             const void* userState
         );
 
