@@ -174,10 +174,13 @@ void Flock::update(float dt) {
         offsetArray[i * 6 + 1] = currentBoid.position.y;
         offsetArray[i * 6 + 2] = currentBoid.position.z;
 
-        // Upload velocity as the direction vector of the boid.
-        offsetArray[i * 6 + 3] = currentBoid.velocity.x;
-        offsetArray[i * 6 + 4] = currentBoid.velocity.y;
-        offsetArray[i * 6 + 5] = currentBoid.velocity.z;
+        // In terms of calculating a rotation,
+        // sqrt seems to be faster than atan2
+        // and saves cos and sin computations on the gpu
+        float componentFactor = 1.0f / currentBoid.velocity.magnitude();
+        offsetArray[i * 6 + 3] = currentBoid.velocity.x * componentFactor;
+        offsetArray[i * 6 + 4] = currentBoid.velocity.y * componentFactor;
+        offsetArray[i * 6 + 5] = currentBoid.velocity.z * componentFactor;
     }
 
     offsetBuffer.bind();
