@@ -8,11 +8,20 @@
 #include "Math/Vector.hpp"
 
 
-constexpr float defaultModel[12] = {
+constexpr std::array<float, 18> defaultModel {
     1.0f, 0.0f, 0.0f,
     -0.7071067811865475f, 0.7071067811865476f, 0.0f,
     -0.5f, 0.0f, 0.0f,
-    -0.7071067811865477f, -0.7071067811865475f, 0.0f
+    -0.7071067811865477f, -0.7071067811865475f, 0.0f,
+    -0.7071067811865477f, 0.0f, 0.7071067811865475f,
+    -0.7071067811865477f, 0.0f, -0.7071067811865475f
+};
+
+constexpr float paperPlaneModel[12] = {
+    1.0f, 0.0f, 0.0f,
+    -0.7071067811865475f, 0.7071067811865476f, 0.0f,
+    -0.5f, 0.0f, 0.0f,
+    -0.7071067811865477f, -0.7071067811865475f, 0.0f,
 };
 
 constexpr float spaceshipModel[15] = {
@@ -23,7 +32,7 @@ constexpr float spaceshipModel[15] = {
     -0.35355339059327373f, -0.35355339059327373f, 0.0f
 };
 
-constexpr size_t maxBufferSize = 15;
+constexpr size_t maxBufferSize = 18;
 
 
 struct Boid {
@@ -59,8 +68,8 @@ class Flock {
     lwvl::ArrayBuffer offsetBuffer{lwvl::Usage::Stream};
 
     //lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::Lines;  // Classic Flox render mode
-    lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::TriangleFan;
-    uint32_t indexCount = 10;
+    lwvl::PrimitiveMode renderMode = lwvl::PrimitiveMode::Triangles;
+    uint32_t indexCount = 12;
     Vector bounds;
 
 public:

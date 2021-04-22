@@ -64,13 +64,13 @@ void Flock::configureRendering(float aspect) {
     // Boid model vertex buffer
     vertexBuffer.bind();
     vertexBuffer.construct<float>(nullptr, maxBufferSize);
-    vertexBuffer.update(defaultModel, 12);
+    vertexBuffer.update(defaultModel.begin(), defaultModel.end());
     arrayBuffer.attribute(3, GL_FLOAT, 3 * sizeof(float), 0);
 
     // Boid model indexing buffer
     indexBuffer.bind();
-    std::array<uint8_t, 10> indexData{
-        0, 1, 1, 2, 2, 0, 2, 3, 3, 0
+    std::array<uint8_t, 12> indexData {
+        0, 1, 2, 2, 3, 0, 0, 4, 2, 2, 5, 0
     };
 
     indexBuffer.construct(indexData.begin(), indexData.end());
@@ -174,13 +174,10 @@ void Flock::update(float dt) {
         offsetArray[i * 6 + 1] = currentBoid.position.y;
         offsetArray[i * 6 + 2] = currentBoid.position.z;
 
-        // In terms of calculating a rotation,
-        // sqrt seems to be faster than atan2
-        // and saves cos and sin computations on the gpu
-        float componentFactor = 1.0f / currentBoid.velocity.magnitude();
-        offsetArray[i * 6 + 3] = currentBoid.velocity.x * componentFactor;
-        offsetArray[i * 6 + 4] = currentBoid.velocity.y * componentFactor;
-        offsetArray[i * 6 + 5] = currentBoid.velocity.z * componentFactor;
+        // Upload velocity as the direction vector of the boid.
+        offsetArray[i * 6 + 3] = currentBoid.velocity.x;
+        offsetArray[i * 6 + 4] = currentBoid.velocity.y;
+        offsetArray[i * 6 + 5] = currentBoid.velocity.z;
     }
 
     offsetBuffer.bind();
@@ -192,6 +189,9 @@ void Flock::update(float dt) {
     m_secondaryFlock = std::move(temp);
 
     //std::cout << "Boid 1 position: " << m_primaryFlock[0].position << std::endl;
+    //for (size_t i = 0; i < 6; i++) {
+    //    std::cout << "angle " << i << ": " << offsetArray[i] << std::endl;
+    //}
 }
 
 void Flock::draw() {
@@ -205,7 +205,12 @@ void Flock::draw() {
 
 static void loadDefaultModel(lwvl::ArrayBuffer &buffer) {
     buffer.bind();
-    buffer.update(defaultModel, 12);
+    buffer.update(defaultModel.begin(), defaultModel.end());
+}
+
+static void loadPaperPlaneModel(lwvl::ArrayBuffer &buffer) {
+    buffer.bind();
+    buffer.update(paperPlaneModel, 18);
 }
 
 static void loadSpaceshipModel(lwvl::ArrayBuffer &buffer) {
@@ -219,18 +224,25 @@ void Flock::changeRenderMode(uint8_t mode) {
             renderMode = lwvl::PrimitiveMode::Lines;
             indexCount = 10;
             std::array<uint8_t, 10> indexData {
-                0, 1, 1, 2, 2, 3, 2, 0, 3, 0
+                0, 1,
+                1, 2,
+                2, 3,
+                2, 0,
+                3, 0
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
-            loadDefaultModel(vertexBuffer);
+            loadPaperPlaneModel(vertexBuffer);
             return;
         }
         case 1: {
-            renderMode = lwvl::PrimitiveMode::TriangleFan;
-            indexCount = 4;
-            std::array<uint8_t, 4> indexData {
-                0, 1, 2, 3
+            renderMode = lwvl::PrimitiveMode::Triangles;
+            indexCount = 12;
+            std::array<uint8_t, 12> indexData {
+                0, 1, 2,
+                2, 3, 0,
+                0, 4, 2,
+                2, 5, 0
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());
@@ -242,7 +254,9 @@ void Flock::changeRenderMode(uint8_t mode) {
             indexCount = 6;
             indexBuffer.bind();
             std::array<uint8_t, 6> indexData {
-                0, 1, 0, 2, 3, 4
+                0, 1,
+                0, 2,
+                3, 4
             };
             indexBuffer.bind();
             indexBuffer.update(indexData.begin(), indexData.end());

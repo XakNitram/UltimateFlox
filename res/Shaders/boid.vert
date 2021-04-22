@@ -7,23 +7,20 @@ layout(location = 2) in vec3 rotation;
 uniform mat4 projection = mat4(1.0);
 uniform float scale = 5.0;
 
+vec4 rotate(vec3 rot, vec3 vec) {
+    const float b2 = rot.x * rot.x + rot.y * rot.y + rot.z * rot.z;
+    return (vec * (1.0 - b2) + rot * (dot(vec, rot) * 2.0) + cross(rot, vec) * (1.0 * 2.0));
+}
+
 void main() {
-    mat4 model = mat4(
-        scale * rotation.x,  scale * rotation.y, 0.0,      0.0,
-        -scale * rotation.y, scale * rotation.x, 0.0,      0.0,
-        0.0,                 0.0,                1.0,      0.0,
-        offset.x,            offset.y,           offset.z, 1.0
+
+    // Non-rotating model matrix can remain, but rotations in 3D need to be done with quaternion calculations.
+    const mat4 model = mat4(
+        scale, 0.0, 0.0, 0.0,
+        0.0, scale, 0.0, 0.0,
+        0.0, 0.0, scale, 0.0,
+        offset.x, offset.y, offset.z, 1.0
     );
 
-//    float x = rotation.x;
-//    float y = rotation.y;
-//    float z = rotation.z;
-//    mat4 model = mat4(
-//        scale * (x * x),             scale * (y * z),             scale * (-z),       0.0,
-//        scale * (x * y * z - y * z), scale * (y * y * z + x * z), scale * (x * y),    0.0,
-//        scale * (x * z * z + y * y), scale * (y * z * z - x * y), scale * (x * z),    0.0,
-//        offset.x,                    offset.y,                    offset.z,           1.0
-//    );
-
-    gl_Position = projection * model * position;
+    gl_Position = projection * model * fullRotation * position;
 }
