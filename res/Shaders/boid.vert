@@ -9,10 +9,10 @@ uniform float scale = 5.0;
 
 void main() {
     mat4 model = mat4(
-        scale * rotation.x,  scale * rotation.y, 0.0, 0.0,
-        -scale * rotation.y, scale * rotation.x, 0.0, 0.0,
-        0.0,                 0.0,                1.0, 0.0,
-        offset.x,            offset.y,           0.0, 1.0
+        scale * rotation.x,  scale * rotation.y, 0.0,      0.0,
+        -scale * rotation.y, scale * rotation.x, 0.0,      0.0,
+        0.0,                 0.0,                1.0,      0.0,
+        offset.x,            offset.y,           offset.z, 1.0
     );
 
 //    float x = rotation.x;

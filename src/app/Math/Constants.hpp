@@ -4,4 +4,5 @@
 namespace constants {
     constexpr float pi = 3.141592653589793f;
     constexpr float tau = 6.283185307179586f;
+    constexpr float root3 = 1.7320508075688772f;
 }

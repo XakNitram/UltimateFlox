@@ -36,11 +36,20 @@ void Flock::configureRendering(float aspect) {
     boidShader.bind();
     boidShader.uniform("scale").set1f(Boid::scale);
 
+    float x, y, z;
     if (aspect >= 1.0f) {
-        boidShader.uniform("projection").setOrthographic(bounds.y, -bounds.y, bounds.x * aspect, -bounds.x * aspect, bounds.z, -bounds.z);
+        x = bounds.x * aspect;
+        y = bounds.y;
+        z = bounds.z * constants::root3 + 50.0f;
     } else {
-        boidShader.uniform("projection").setOrthographic(bounds.y / aspect, -bounds.y / aspect, bounds.x, -bounds.x, bounds.z, -bounds.z);
+        x = bounds.x;
+        y = bounds.y / aspect;
+        z = bounds.z * constants::root3 + 50.0f;
     }
+
+    boidShader.uniform("projection").setOrthographic(
+        y, -y, x, -x, z, -z
+    );
 
     //boidShader.uniform("color").set3f(1.00000f, 0.00000f, 0.00000f);  // Red
     //boidShader.uniform("color").set3f(1.00000f, 1.00000f, 1.00000f);  // White
@@ -54,9 +63,9 @@ void Flock::configureRendering(float aspect) {
 
     // Boid model vertex buffer
     vertexBuffer.bind();
-    vertexBuffer.construct<float>(nullptr, 10);  // Create a buffer of 10 floats
-    vertexBuffer.update(defaultModel, 8);  // Fill it with 8
-    arrayBuffer.attribute(2, GL_FLOAT, 2 * sizeof(float), 0);
+    vertexBuffer.construct<float>(nullptr, maxBufferSize);
+    vertexBuffer.update(defaultModel, 12);
+    arrayBuffer.attribute(3, GL_FLOAT, 3 * sizeof(float), 0);
 
     // Boid model indexing buffer
     indexBuffer.bind();
@@ -82,8 +91,8 @@ void Flock::configureRendering(float aspect) {
     }
 
     offsetBuffer.construct(offsetArray.get(), 6 * flockSize);
-    arrayBuffer.attribute(2, GL_FLOAT, 6 * sizeof(float), 0, 1);
-    arrayBuffer.attribute(2, GL_FLOAT, 6 * sizeof(float), 3 * sizeof(float), 1);
+    arrayBuffer.attribute(3, GL_FLOAT, 6 * sizeof(float), 0, 1);
+    arrayBuffer.attribute(3, GL_FLOAT, 6 * sizeof(float), 3 * sizeof(float), 1);
 }
 
 void Flock::update(float dt) {
@@ -97,6 +106,8 @@ void Flock::update(float dt) {
             || currentBoid.position.x + Boid::scale >= bounds.x
             || currentBoid.position.y - Boid::scale <= -bounds.y
             || currentBoid.position.y + Boid::scale >= bounds.y
+            || currentBoid.position.z - Boid::scale <= -bounds.z
+            || currentBoid.position.z + Boid::scale >= bounds.z
         ) {
             centerSteer -= currentBoid.position;
             centerSteer = currentBoid.steer(centerSteer);
@@ -117,7 +128,6 @@ void Flock::update(float dt) {
             }
 
             const Boid& otherBoid = m_primaryFlock[j];
-
             const float d = currentBoid.position.distance(otherBoid.position);
             if (d < Boid::disruptiveRadius && d > 0.0f) {
                 Vector diff = currentBoid.position - otherBoid.position;
@@ -174,7 +184,7 @@ void Flock::update(float dt) {
     }
 
     offsetBuffer.bind();
-    offsetBuffer.update(offsetArray.get(), flockSize * 4);
+    offsetBuffer.update(offsetArray.get(), flockSize * 6);
 
     // Move array pointers
     auto temp = std::move(m_primaryFlock);
@@ -195,12 +205,12 @@ void Flock::draw() {
 
 static void loadDefaultModel(lwvl::ArrayBuffer &buffer) {
     buffer.bind();
-    buffer.update(defaultModel, 8);
+    buffer.update(defaultModel, 12);
 }
 
 static void loadSpaceshipModel(lwvl::ArrayBuffer &buffer) {
     buffer.bind();
-    buffer.update(spaceshipModel, 10);
+    buffer.update(spaceshipModel, 15);
 }
 
 void Flock::changeRenderMode(uint8_t mode) {
