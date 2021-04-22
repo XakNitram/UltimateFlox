@@ -8,20 +8,22 @@
 #include "Math/Vector.hpp"
 
 
-constexpr float defaultModel[8] = {
-    1.0, 0.0,
-    -0.7071067811865475f, 0.7071067811865476f,
-    -0.5, 0.0,
-    -0.7071067811865477f, -0.7071067811865475f,
+constexpr float defaultModel[12] = {
+    1.0f, 0.0f, 0.0f,
+    -0.7071067811865475f, 0.7071067811865476f, 0.0f,
+    -0.5f, 0.0f, 0.0f,
+    -0.7071067811865477f, -0.7071067811865475f, 0.0f
 };
 
-constexpr float spaceshipModel[10] = {
-    1.0, 0.0,
-    -0.7071067811865475f, 0.7071067811865476f,
-    -0.7071067811865477f, -0.7071067811865475f,
-    -0.35355339059327373f, 0.35355339059327373f,
-    -0.35355339059327373f, -0.35355339059327373f
+constexpr float spaceshipModel[15] = {
+    1.0f, 0.0f, 0.0f,
+    -0.7071067811865475f, 0.7071067811865476f, 0.0f,
+    -0.7071067811865477f, -0.7071067811865475f, 0.0f,
+    -0.35355339059327373f, 0.35355339059327373f, 0.0f,
+    -0.35355339059327373f, -0.35355339059327373f, 0.0f
 };
+
+constexpr size_t maxBufferSize = 15;
 
 
 struct Boid {
@@ -38,14 +40,14 @@ struct Boid {
 
 
 class Flock {
-    static constexpr float worldBound = 200.0f;
+    static constexpr float worldBound = 300.0f;
 
     // without any steering, this number can go above 500,000 before dipping below 60fps
     uint64_t flockSize;
 
     std::unique_ptr<Boid[]> m_primaryFlock = std::make_unique<Boid[]>(flockSize);
     std::unique_ptr<Boid[]> m_secondaryFlock = std::make_unique<Boid[]>(flockSize);
-    std::unique_ptr<float[]> offsetArray = std::make_unique<float[]>(flockSize * 4);
+    std::unique_ptr<float[]> offsetArray = std::make_unique<float[]>(flockSize * 6);
 
     // At the flock sizes I want to hit, flockSize ^ 2 would be > 4TB of RAM to store this matrix.
     //std::unique_ptr<float[]> distanceMatrix = std::make_unique<float[]>(flockSize * flockSize);
@@ -69,5 +71,5 @@ public:
     void draw();
 
 private:
-    void configureRendering();
+    void configureRendering(float aspect);
 };

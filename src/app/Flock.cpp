@@ -9,24 +9,25 @@ Vector Boid::steer(Vector vec) const {
 }
 
 
-Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{aspect >= 1.0f ? worldBound * aspect : worldBound, aspect < 1.0f ? worldBound * aspect : worldBound} {
+Flock::Flock(size_t flock_size, float aspect) : flockSize(flock_size), bounds{worldBound, worldBound, worldBound} {
+
     // Set up boid starting locations
     const float tauOverSize = constants::tau / static_cast<float>(flockSize);
     for (size_t i = 0; i < flockSize; i++) {
         Boid &boid = m_primaryFlock[i];
         auto angle = static_cast<float>(i) * tauOverSize;
-        Vector offsets {cosf(angle), sinf(angle)};
+        Vector offsets {cosf(angle), sinf(angle), 0.0f};
         boid.position = 50.0f * offsets;
-        boid.velocity = 10.0f * offsets + angle;
+        boid.velocity = 10.0f * offsets;
+        boid.velocity.z = cosf(angle);
         boid.velocity.magnitude(Boid::maxSpeed);
-        boid.acceleration.y = -1.0f;
     }
 
     // Set up boid batch rendering
-    configureRendering();
+    configureRendering(aspect);
 }
 
-void Flock::configureRendering() {
+void Flock::configureRendering(float aspect) {
     // Construct shader
     lwvl::VertexShader vertexSource{lwvl::VertexShader::readFile("Data/Shaders/boid.vert")};
     lwvl::FragmentShader fragmentSource{lwvl::FragmentShader::readFile("Data/Shaders/boid.frag")};
@@ -34,7 +35,12 @@ void Flock::configureRendering() {
 
     boidShader.bind();
     boidShader.uniform("scale").set1f(Boid::scale);
-    boidShader.uniform("projection").set2DOrthographic(bounds.y, -bounds.y, bounds.x, -bounds.x);
+
+    if (aspect >= 1.0f) {
+        boidShader.uniform("projection").setOrthographic(bounds.y, -bounds.y, bounds.x * aspect, -bounds.x * aspect, bounds.z, -bounds.z);
+    } else {
+        boidShader.uniform("projection").setOrthographic(bounds.y / aspect, -bounds.y / aspect, bounds.x, -bounds.x, bounds.z, -bounds.z);
+    }
 
     //boidShader.uniform("color").set3f(1.00000f, 0.00000f, 0.00000f);  // Red
     //boidShader.uniform("color").set3f(1.00000f, 1.00000f, 1.00000f);  // White
@@ -64,15 +70,20 @@ void Flock::configureRendering() {
     offsetBuffer.bind();
     for (size_t i = 0; i < flockSize; i++) {
         const Boid &boid = m_primaryFlock[i];
-        offsetArray[i * 4 + 0] = boid.position.x;
-        offsetArray[i * 4 + 1] = boid.position.y;
-        offsetArray[i * 4 + 2] = boid.velocity.x;
-        offsetArray[i * 4 + 3] = boid.velocity.y;
+        const float componentFactor = 1.0f / boid.velocity.magnitude();
+
+        offsetArray[i * 6 + 0] = boid.position.x;
+        offsetArray[i * 6 + 1] = boid.position.y;
+        offsetArray[i * 6 + 2] = boid.position.z;
+
+        offsetArray[i * 6 + 3] = boid.velocity.x * componentFactor;
+        offsetArray[i * 6 + 4] = boid.velocity.y * componentFactor;
+        offsetArray[i * 6 + 5] = boid.velocity.z * componentFactor;
     }
 
-    offsetBuffer.construct(offsetArray.get(), 4 * flockSize);
-    arrayBuffer.attribute(2, GL_FLOAT, 4 * sizeof(float), 0, 1);
-    arrayBuffer.attribute(2, GL_FLOAT, 4 * sizeof(float), 2 * sizeof(float), 1);
+    offsetBuffer.construct(offsetArray.get(), 6 * flockSize);
+    arrayBuffer.attribute(2, GL_FLOAT, 6 * sizeof(float), 0, 1);
+    arrayBuffer.attribute(2, GL_FLOAT, 6 * sizeof(float), 3 * sizeof(float), 1);
 }
 
 void Flock::update(float dt) {
@@ -149,15 +160,17 @@ void Flock::update(float dt) {
         currentBoid.acceleration *= 0.0f;
 
         // Update the offsets
-        offsetArray[i * 4 + 0] = currentBoid.position.x;
-        offsetArray[i * 4 + 1] = currentBoid.position.y;
+        offsetArray[i * 6 + 0] = currentBoid.position.x;
+        offsetArray[i * 6 + 1] = currentBoid.position.y;
+        offsetArray[i * 6 + 2] = currentBoid.position.z;
 
         // In terms of calculating a rotation,
         // sqrt seems to be faster than atan2
         // and saves cos and sin computations on the gpu
-        float magFactor = 1.0f / currentBoid.velocity.magnitude();
-        offsetArray[i * 4 + 2] = currentBoid.velocity.x * magFactor;
-        offsetArray[i * 4 + 3] = currentBoid.velocity.y * magFactor;
+        float componentFactor = 1.0f / currentBoid.velocity.magnitude();
+        offsetArray[i * 6 + 3] = currentBoid.velocity.x * componentFactor;
+        offsetArray[i * 6 + 4] = currentBoid.velocity.y * componentFactor;
+        offsetArray[i * 6 + 5] = currentBoid.velocity.z * componentFactor;
     }
 
     offsetBuffer.bind();

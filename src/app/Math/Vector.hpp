@@ -4,6 +4,7 @@
 struct Vector {
     float x = 0.0f;
     float y = 0.0f;
+    float z = 0.0f;
 
     [[nodiscard]] float magnitude() const;
     void magnitude(float value);
